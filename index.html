@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI八字算命 - 探索你的命运轨迹</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 添加Markdown渲染支持 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <!-- 添加Mermaid图表支持 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <!-- 添加表格样式支持 -->
+    <style>
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .markdown-content th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        .markdown-content tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .markdown-content pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .markdown-content code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-yin-yang"></i>
+                    <h1>AI八字算命</h1>
+                </div>
+                <p class="subtitle">运用现代AI技术，解读古老智慧</p>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main-content">
+            <!-- 输入表单区域 -->
+            <section class="input-section" id="inputSection">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-edit"></i> 请填写您的出生信息</h2>
+                    <p>准确的出生信息将帮助我们为您提供更精准的命理分析</p>
+                </div>
+
+                <form class="birth-form" id="birthForm">
+                    <div class="form-grid">
+                        <!-- 基本信息 -->
+                        <div class="form-group full-width">
+                            <label for="name">
+                                <i class="fas fa-signature"></i>
+                                姓名
+                            </label>
+                            <input type="text" id="name" name="name" placeholder="请输入您的姓名" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">
+                                <i class="fas fa-venus-mars"></i>
+                                性别
+                            </label>
+                            <select id="gender" name="gender" required>
+                                <option value="">请选择性别</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="birth_place">
+                                <i class="fas fa-map-marker-alt"></i>
+                                出生地点
+                            </label>
+                            <input type="text" id="birth_place" name="birth_place" placeholder="例：北京市朝阳区" required>
+                        </div>
+
+                        <!-- 出生日期时间 -->
+                        <div class="form-group">
+                            <label for="year">
+                                <i class="fas fa-calendar-alt"></i>
+                                出生年份
+                            </label>
+                            <input type="number" id="year" name="year" min="1900" max="2030" placeholder="例：1990" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="month">
+                                <i class="fas fa-calendar"></i>
+                                出生月份
+                            </label>
+                            <select id="month" name="month" required>
+                                <option value="">选择月份</option>
+                                <option value="1">1月</option>
+                                <option value="2">2月</option>
+                                <option value="3">3月</option>
+                                <option value="4">4月</option>
+                                <option value="5">5月</option>
+                                <option value="6">6月</option>
+                                <option value="7">7月</option>
+                                <option value="8">8月</option>
+                                <option value="9">9月</option>
+                                <option value="10">10月</option>
+                                <option value="11">11月</option>
+                                <option value="12">12月</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="day">
+                                <i class="fas fa-calendar-day"></i>
+                                出生日期
+                            </label>
+                            <input type="number" id="day" name="day" min="1" max="31" placeholder="例：15" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="hour">
+                                <i class="fas fa-clock"></i>
+                                出生小时
+                            </label>
+                            <input type="number" id="hour" name="hour" min="0" max="23" placeholder="例：14 (24小时制)" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="minute">
+                                <i class="fas fa-stopwatch"></i>
+                                出生分钟
+                            </label>
+                            <input type="number" id="minute" name="minute" min="0" max="59" placeholder="例：30" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="second">
+                                <i class="fas fa-hourglass-half"></i>
+                                出生秒数
+                            </label>
+                            <input type="number" id="second" name="second" min="0" max="59" placeholder="例：45" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <i class="fas fa-magic"></i>
+                            开始算命
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- 加载状态 -->
+            <section class="loading-section" id="loadingSection" style="display: none;">
+                <div class="loading-content">
+                    <div class="loading-spinner">
+                        <i class="fas fa-yin-yang fa-spin"></i>
+                    </div>
+                    <h3>正在分析您的命理信息，预计等待5-10分钟...</h3>
+                    <p>请稍候，我们正在运用古老智慧与现代技术为您解读命运</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 结果展示区域 -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="section-header">
+                    <h2><i class="fas fa-scroll"></i> 您的八字命理分析报告</h2>
+                    <button class="new-reading-btn" id="newReadingBtn">
+                        <i class="fas fa-redo"></i>
+                        重新算命
+                    </button>
+                </div>
+
+                <div class="result-content" id="resultContent">
+                    <!-- 结果内容将通过JavaScript动态填充 -->
+                </div>
+            </section>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>&copy; 2025 AI八字算命. 仅供娱乐参考，不构成人生决策建议.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
