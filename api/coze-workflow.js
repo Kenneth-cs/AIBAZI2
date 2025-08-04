@@ -20,10 +20,10 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.COZE_API_KEY}`,
+                'Authorization': `Bearer your_actual_api_key`,
             },
             body: JSON.stringify({
-                workflow_id: process.env.WORKFLOW_ID || '73664689170551*****',
+                workflow_id: '7527326304544161826',
                 parameters: inputs
             })
         });
