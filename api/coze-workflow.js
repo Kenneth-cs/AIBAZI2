@@ -14,7 +14,8 @@ export default async function handler(req, res) {
     }
     
     try {
-        const { inputs } = req.body;
+        // 修改参数接收方式，与本地server.js保持一致
+        const { name, gender, birth_place, birth_datetime, year, month, day, hour, minute, second } = req.body;
         
         const response = await fetch('https://api.coze.cn/v1/workflow/run', {
             method: 'POST',
