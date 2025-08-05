@@ -96,6 +96,17 @@ app.post('/api/coze-workflow', async (req, res) => {
             const result = await response.json();
             console.log('同步工作流结果:', result);
             
+            // 检查业务错误码
+            if (result.code && result.code !== 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: '工作流执行失败',
+                    message: result.msg || '参数错误',
+                    code: result.code,
+                    debug_url: result.debug_url
+                });
+            }
+            
             // 构建符合前端期望的响应格式
             const formattedResponse = {
                 success: true,
