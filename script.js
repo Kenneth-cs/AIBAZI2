@@ -185,20 +185,18 @@ function addFormValidation() {
 // 调用coze工作流
 async function callCozeWorkflow(data) {
     try {
-        // 构建请求体，需要包装在inputs字段中
+        // 构建请求体，直接发送用户数据给代理服务器
         const requestBody = {
-            inputs: {
-                name: data.name,
-                gender: data.gender,
-                birth_place: data.birth_place,
-                birth_datetime: data.birth_datetime,
-                year: data.year,
-                month: data.month,
-                day: data.day,
-                hour: data.hour,
-                minute: data.minute,
-                second: data.second
-            }
+            name: data.name,
+            gender: data.gender,
+            birth_place: data.birth_place,
+            birth_datetime: data.birth_datetime,
+            year: data.year,
+            month: data.month,
+            day: data.day,
+            hour: data.hour,
+            minute: data.minute,
+            second: data.second
         };
         
         console.log('=== 开始调用coze工作流 ===');
@@ -282,7 +280,7 @@ async function getMockResult(data) {
                     water: 2
                 }
             },
-            fortune_summary: `${data.name}您好，根据您的八字分析：\n\n您出生于${data.birth_datetime}，${data.birth_place}。\n\n八字为：庚子年 戊寅月 甲午日 丙寅时\n\n五行分析：木旺火相，性格开朗积极，具有很强的创造力和领导能力。您天生聪慧，善于思考，在事业上容易取得成功。\n\n财运方面：中年后财运亨通，投资理财方面有很好的天赋，但需要注意不要过于冒险。\n\n感情方面：感情丰富，桃花运较好，但要注意选择合适的伴侣，婚姻生活会是幸福。\n\n健康方面：整体健康状况良好，但需要注意肝胆方面的保养，多运动，保持良好作息。\n\n的事业发展：适合从事创意、管理、教育等行业，贵人运较好，容易得到他人帮助。`,
+            fortune_summary: `${data.name}您好，根据您的八字分析：\n\n您出生于${data.birth_datetime}，${data.birth_place}。\n\n八字为：庚子年 戊寅月 甲午日 丙寅时\n\n五行分析：木旺火相，性格开朗积极，具有很强的创造力和领导能力。您天生聪慧，善于思考，在事业上容易取得成功。\n\n财运方面：中年后财运亨通，投资理财方面有很好的天赋，但需要注意不要过于冒险。\n\n感情方面：感情丰富，桃花运较好，但要注意选择合适的伴侣，婚姻生活会是幸福。\n\n健康方面：整体健康状况良好，但需要注意肝胆方面的保养，多运动，保持良好作息。\n\n事业发展：适合从事创意、管理、教育等行业，贵人运较好，容易得到他人帮助。`,
             recommendations: [
                 "保持积极乐观的心态，发挥自己的创造天赋",
                 "在投资理财时要谨慎，不要盲目跟风",

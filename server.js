@@ -29,12 +29,12 @@ app.post('/api/coze-workflow', async (req, res) => {
         
         const { name, gender, birth_place, birth_datetime, year, month, day, hour, minute, second } = req.body;
         
-        // 使用异步API端点
-        const apiUrl = 'https://api.coze.cn/v1/workflow/stream_run';
+        // 使用同步API端点
+        const apiUrl = 'https://api.coze.cn/v1/workflow/run';
         
-        console.log('代理请求到coze异步API:', apiUrl);
+        console.log('代理请求到coze同步API:', apiUrl);
         
-        // 构建符合Coze异步API格式的请求体
+        // 构建符合Coze同步API格式的请求体
         const cozeRequestBody = {
             workflow_id: "7527326304544161826",
             parameters: {
@@ -51,7 +51,7 @@ app.post('/api/coze-workflow', async (req, res) => {
             }
         };
         
-        console.log('发送到Coze的异步请求体:', JSON.stringify(cozeRequestBody, null, 2));
+        console.log('发送到Coze的同步请求体:', JSON.stringify(cozeRequestBody, null, 2));
         
         // 创建AbortController用于超时控制 - 设置为10分钟
         const controller = new AbortController();
@@ -63,7 +63,6 @@ app.post('/api/coze-workflow', async (req, res) => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer pat_BoKyWehPisvL0EYs9SuGpBsgaKrwqFngYXmlTgNP82Ft2yrHQG5tH7bgaKqRv2JG',
-                    'Accept': 'text/event-stream', // 异步API使用SSE格式
                     'User-Agent': 'AILife/1.0'
                 },
                 body: JSON.stringify(cozeRequestBody),
@@ -72,12 +71,12 @@ app.post('/api/coze-workflow', async (req, res) => {
             
             clearTimeout(timeoutId);
             
-            console.log('coze异步API响应状态:', response.status);
+            console.log('coze同步API响应状态:', response.status);
             console.log('响应头:', Object.fromEntries(response.headers.entries()));
             
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('coze异步API错误:', errorText);
+                console.error('coze同步API错误:', errorText);
                 
                 if (response.status === 401) {
                     return res.status(401).json({
@@ -88,109 +87,36 @@ app.post('/api/coze-workflow', async (req, res) => {
                 }
                 
                 return res.status(response.status).json({
-                    error: `异步API调用失败: ${response.status} ${response.statusText}`,
+                    error: `同步API调用失败: ${response.status} ${response.statusText}`,
                     details: errorText
                 });
             }
             
-            // 处理SSE流式响应
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let finalResult = null;
-            let buffer = '';
+            // 处理同步API响应
+            const result = await response.json();
+            console.log('同步工作流结果:', result);
             
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop(); // 保留不完整的行
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6);
-                        if (data === '[DONE]') {
-                            break;
-                        }
-                        
-                        try {
-                            const eventData = JSON.parse(data);
-                            console.log('SSE事件:', eventData);
-                            
-                            // 检查是否是认证中断
-                            if (eventData.interrupt_data && eventData.interrupt_data.need_auth) {
-                                const authInfo = eventData.interrupt_data;
-                                return res.status(400).json({
-                                    success: false,
-                                    error: '工作流需要认证',
-                                    message: `${authInfo.plugin_name}需要OAuth认证`,
-                                    auth_required: true,
-                                    details: '请在Coze后台完成插件认证后重试'
-                                });
-                            }
-                            
-                            // 修改：检查多种成功完成的条件
-                            if ((eventData.event === 'workflow.finish' && eventData.data) ||
-                                (eventData.node_is_finish && eventData.node_title === 'End' && eventData.content)) {
-                                
-                                // 处理不同的响应格式
-                                if (eventData.data) {
-                                    // 标准的 workflow.finish 格式
-                                    finalResult = eventData.data;
-                                } else if (eventData.content) {
-                                    // 新的响应格式
-                                    finalResult = {
-                                        output: eventData.content,
-                                        usage: eventData.usage,
-                                        debug_url: null // 会在后续的事件中获取
-                                    };
-                                }
-                            }
-                            
-                            // 单独处理 debug_url
-                            if (eventData.debug_url && finalResult) {
-                                finalResult.debug_url = eventData.debug_url;
-                            }
-                            
-                        } catch (e) {
-                            console.log('解析SSE数据失败:', e.message);
-                        }
-                    }
+            // 构建符合前端期望的响应格式
+            const formattedResponse = {
+                success: true,
+                data: {
+                    name: name,
+                    basic_info: {
+                        birth_date: birth_datetime,
+                        birth_place: birth_place,
+                        gender: gender
+                    },
+                    fortune_content: result.data || result.output || '算命结果获取成功',
+                    debug_url: result.debug_url,
+                    usage: result.usage
                 }
-            }
+            };
             
-            if (finalResult) {
-                console.log('异步工作流最终结果:', finalResult);
-                
-                // 构建符合前端期望的响应格式
-                const formattedResponse = {
-                    success: true,
-                    data: {
-                        name: name,
-                        basic_info: {
-                            birth_date: birth_datetime,
-                            birth_place: birth_place,
-                            gender: gender
-                        },
-                        fortune_content: finalResult.output, // 直接使用内容
-                        debug_url: finalResult.debug_url,
-                        usage: finalResult.usage
-                    }
-                };
-                
-                res.json(formattedResponse);
-            } else {
-                res.status(500).json({
-                    success: false,
-                    error: '异步工作流执行失败',
-                    message: '未收到最终结果'
-                });
-            }
+            res.json(formattedResponse);
             
         } catch (fetchError) {
             clearTimeout(timeoutId);
-            console.error('异步API请求失败:', fetchError);
+            console.error('同步API请求失败:', fetchError);
             
             if (fetchError.name === 'AbortError') {
                 return res.status(408).json({
