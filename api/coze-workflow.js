@@ -49,27 +49,61 @@ export default async function handler(req, res) {
         }
         
         const result = await response.json();
+        console.log('Coze原始返回数据:', JSON.stringify(result, null, 2));
         
         // 添加业务错误检查
         if (result.code && result.code !== 0) {
             return res.status(400).json({
                 success: false,
-                error: result.msg || 'Coze workflow error',
-                code: result.code
+                error: '工作流执行失败',
+                message: result.msg || '参数错误',
+                code: result.code,
+                debug_url: result.debug_url
             });
         }
         
-        // 成功响应
-        res.status(200).json({
+        // 构建符合前端期望的响应格式（与本地server.js完全一致）
+        const formattedResponse = {
             success: true,
             data: {
-                name: result.data?.name,
-                basic_info: result.data?.basic_info,
-                fortune_content: result.data?.fortune_content,
+                name: name,
+                basic_info: {
+                    birth_date: birth_datetime,
+                    birth_place: birth_place,
+                    gender: gender
+                },
+                // 主要内容字段 - 与本地server.js保持一致
+                fortune_content: result.data || result.output || '算命结果获取成功',
+                
+                // 添加前端支持的直接字段（支持markdown、表格等）
+                dayun: result.data?.dayun,
+                five_dayun: result.data?.five_dayun, 
+                geju: result.data?.geju,
+                output: result.data?.output,
+                life: result.data?.life,
+                wuxinggeju: result.data?.wuxinggeju,
+                shishen: result.data?.shishen,
+                old_dayun: result.data?.old_dayun,
+                now_dayun: result.data?.now_dayun,
+                now_dayun1: result.data?.now_dayun1,
+                
+                // 保留outputs结构以支持前端的多种数据格式
+                outputs: {
+                    fortune_content: result.data?.fortune_content || result.data || result.output,
+                    dayun: result.data?.dayun,
+                    five_dayun: result.data?.five_dayun,
+                    geju: result.data?.geju,
+                    output: result.data?.output,
+                    debug_url: result.debug_url,
+                    usage: result.usage
+                },
+                
                 debug_url: result.debug_url,
                 usage: result.usage
             }
-        });
+        };
+        
+        res.json(formattedResponse);
         
     } catch (error) {
         console.error('API调用错误:', error);
