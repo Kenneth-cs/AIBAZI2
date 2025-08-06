@@ -13,7 +13,7 @@ const CONFIG = {
     // 其他配置
     LOADING_DURATION: 10000,
     PROGRESS_ANIMATION_SPEED: 50,
-    API_TIMEOUT: 600000
+    API_TIMEOUT: 960000  // 16分钟，比后端稍长以避免前端先超时
 };
 
 // DOM元素引用
@@ -202,14 +202,24 @@ async function callCozeWorkflow(data) {
         console.log('=== 开始调用coze工作流 ===');
         console.log('请求数据:', requestBody);
         
-        const response = await fetch(CONFIG.PROXY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
+        // 创建AbortController用于超时控制
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), CONFIG.API_TIMEOUT);
+        
+        let response;
+        try {
+            response = await fetch(CONFIG.PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody),
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
         
         console.log('响应状态:', response.status);
         
@@ -244,6 +254,14 @@ async function callCozeWorkflow(data) {
     } catch (error) {
         console.error('=== coze工作流调用失败 ===');
         console.error('错误信息:', error.message);
+        
+        // 处理超时错误
+        if (error.name === 'AbortError') {
+            return {
+                success: false,
+                message: '请求超时，工作流执行时间过长，请稍后重试'
+            };
+        }
         
         // 返回错误结果，不使用备用数据
         return {

@@ -53,9 +53,9 @@ app.post('/api/coze-workflow', async (req, res) => {
         
         console.log('发送到Coze的同步请求体:', JSON.stringify(cozeRequestBody, null, 2));
         
-        // 创建AbortController用于超时控制 - 设置为10分钟
+        // 创建AbortController用于超时控制 - 设置为15分钟，给Coze更多处理时间
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 600000);
+        const timeoutId = setTimeout(() => controller.abort(), 900000);
         
         try {
             const response = await fetch(apiUrl, {
@@ -63,10 +63,13 @@ app.post('/api/coze-workflow', async (req, res) => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer pat_BoKyWehPisvL0EYs9SuGpBsgaKrwqFngYXmlTgNP82Ft2yrHQG5tH7bgaKqRv2JG',
-                    'User-Agent': 'AILife/1.0'
+                    'User-Agent': 'AILife/1.0',
+                    'Connection': 'keep-alive'
                 },
                 body: JSON.stringify(cozeRequestBody),
-                signal: controller.signal
+                signal: controller.signal,
+                // 增加一些网络配置来处理长时间响应
+                keepalive: true
             });
             
             clearTimeout(timeoutId);
@@ -133,7 +136,16 @@ app.post('/api/coze-workflow', async (req, res) => {
                 return res.status(408).json({
                     success: false,
                     error: '请求超时',
-                    message: '工作流执行超过10分钟，请稍后重试'
+                    message: '工作流执行超过15分钟，请稍后重试'
+                });
+            }
+            
+            // 处理Headers Timeout Error
+            if (fetchError.cause && fetchError.cause.code === 'UND_ERR_HEADERS_TIMEOUT') {
+                return res.status(408).json({
+                    success: false,
+                    error: '响应头超时',
+                    message: 'Coze API响应头接收超时，可能是网络问题或API响应过慢，请稍后重试'
                 });
             }
             
