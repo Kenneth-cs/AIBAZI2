@@ -183,7 +183,9 @@ function addFormValidation() {
 }
 
 // 调用coze工作流
-async function callCozeWorkflow(data) {
+async function callCozeWorkflow(data, retryCount = 0) {
+    const maxRetries = 3; // 增加重试次数
+    
     try {
         // 构建请求体，直接发送用户数据给代理服务器
         const requestBody = {
@@ -199,7 +201,7 @@ async function callCozeWorkflow(data) {
             second: data.second
         };
         
-        console.log('=== 开始调用coze工作流 ===');
+        console.log(`=== 开始调用coze工作流 (第${retryCount + 1}次尝试) ===`);
         console.log('请求数据:', requestBody);
         
         // 创建AbortController用于超时控制
@@ -223,9 +225,21 @@ async function callCozeWorkflow(data) {
         
         console.log('响应状态:', response.status);
         
+        // 检查是否需要重试的状态码
         if (!response.ok) {
             const errorText = await response.text();
             console.error('API响应错误:', errorText);
+            
+            // 对于504、502、503等网关错误，进行重试
+            if ([502, 503, 504].includes(response.status) && retryCount < maxRetries) {
+                console.log(`检测到${response.status}错误，准备重试...`);
+                // 等待一段时间后重试，使用指数退避策略
+                const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+                console.log(`等待${delay}ms后重试`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return callCozeWorkflow(data, retryCount + 1);
+            }
+            
             throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
         }
         
@@ -252,21 +266,35 @@ async function callCozeWorkflow(data) {
         }
         
     } catch (error) {
-        console.error('=== coze工作流调用失败 ===');
+        console.error(`=== coze工作流调用失败 (第${retryCount + 1}次尝试) ===`);
         console.error('错误信息:', error.message);
         
-        // 处理超时错误
-        if (error.name === 'AbortError') {
-            return {
-                success: false,
-                message: '请求超时，工作流执行时间过长，请稍后重试'
-            };
+        // 处理超时错误 - 也可以重试
+        if (error.name === 'AbortError' && retryCount < maxRetries) {
+            console.log('请求超时，准备重试...');
+            const delay = Math.pow(2, retryCount) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return callCozeWorkflow(data, retryCount + 1);
         }
         
-        // 返回错误结果，不使用备用数据
+        // 网络错误也可以重试
+        if ((error.message.includes('fetch') || error.message.includes('network')) && retryCount < maxRetries) {
+            console.log('网络错误，准备重试...');
+            const delay = Math.pow(2, retryCount) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return callCozeWorkflow(data, retryCount + 1);
+        }
+        
+        // 如果重试次数用完或其他错误，返回失败结果
+        if (retryCount >= maxRetries) {
+            console.error(`已达到最大重试次数(${maxRetries})，停止重试`);
+        }
+        
         return {
             success: false,
-            message: error.message || '网络请求失败，请检查网络连接后重试'
+            message: error.name === 'AbortError' 
+                ? `请求超时，已重试${retryCount + 1}次，请稍后重试` 
+                : `${error.message}，已重试${retryCount + 1}次`
         };
     }
 }
@@ -391,13 +419,29 @@ function displayResultContent(result) {
         
         // 如果解析后是对象，处理其中的内容
         if (typeof contentData === 'object' && contentData !== null) {
-            const contentSections = [
-                { key: 'life', title: '🌟 命理基础分析', content: contentData.life },
-                { key: 'dayun', title: '📅 大运流年', content: contentData.dayun },
-                { key: 'five_dayun', title: '📊 近五年流年', content: contentData.five_dayun },
-                { key: 'geju', title: '🎯 格局特点', content: contentData.geju },
-                { key: 'output', title: '📝 综合分析', content: contentData.output }
-            ];
+            // 定义所有可能的参数及其对应的标题
+            const parameterMap = {
+                life: '🌟 命盘基本结构',
+                wuxinggeju: '⚡ 五行格局强弱与阴阳平衡',
+                shishen: '🎭 十神旺意与喜用神分析',
+                geju: '🎯 格局特点与核心命题',
+                old_dayun: '📜 往昔大运深度解析',
+                now_dayun: '🔄 当前大运深度解析与人生导航',
+                dayun: '📅 大运流年解析报告',
+                five_dayun: '📊 近五年流年关键节点',
+                now_dayun1: '🎯 现代可行建议',
+                output: '📝 总结输出',
+                output1: '📄 文本处理'
+            };
+            
+            // 动态构建contentSections，只包含实际存在且有内容的参数
+            const contentSections = Object.keys(parameterMap)
+                .filter(key => contentData[key] && contentData[key].toString().trim())
+                .map(key => ({
+                    key: key,
+                    title: parameterMap[key],
+                    content: contentData[key]
+                }));
             
             const validSections = contentSections.filter(section => 
                 section.content && section.content.toString().trim()
@@ -672,4 +716,12 @@ function showError(message) {
         </div>
     `;
     elements.resultSection.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 在showLoadingState函数中添加重试状态显示
+function updateLoadingMessage(message) {
+    const loadingText = document.querySelector('#loadingSection .loading-text');
+    if (loadingText) {
+        loadingText.textContent = message;
+    }
 }

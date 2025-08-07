@@ -13,10 +13,40 @@ body {
     line-height: 1.6;
 }
 
+/* 调整容器最大宽度，让内容更好地利用屏幕空间 */
 .container {
-    max-width: 1200px;
+    max-width: 1600px; /* 从1200px增加到1600px */
     margin: 0 auto;
     padding: 20px;
+}
+
+/* 为超大屏幕进一步优化 */
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1800px;
+        padding: 40px;
+    }
+}
+
+/* 调整表单最大宽度，避免在大屏幕上过于宽泛 */
+.birth-form {
+    max-width: 1000px; /* 从800px增加到1000px */
+    margin: 0 auto;
+}
+
+/* 优化表单网格布局 */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 调整最小宽度 */
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+/* 在大屏幕上限制表单列数，避免过于分散 */
+@media (min-width: 1200px) {
+    .form-grid {
+        grid-template-columns: repeat(3, 1fr); /* 最多3列 */
+    }
 }
 
 /* 头部样式 */
@@ -353,10 +383,74 @@ body {
     border-left: 4px solid #667eea;
 }
 
+/* 修改分析区域标题样式 - 保持emoji原色，文字应用渐变 */
 .analysis-section h5 {
-    color: #667eea;
-    margin-bottom: 10px;
-    font-size: 16px;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.3;
+    padding: 10px 0;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    /* 移除整体的渐变色效果 */
+    color: #333; /* 设置默认文字颜色 */
+}
+
+/* 为标题中的文字部分（非emoji）应用渐变色 */
+.analysis-section h5::after {
+    content: attr(data-text);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 结果内容区域的h3标题也做同样处理 */
+.result-content h3 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+    padding: 15px 0;
+    border-bottom: 3px solid rgba(102, 126, 234, 0.3);
+    color: #333; /* 保持emoji原色 */
+}
+
+/* 更简单的解决方案：使用CSS选择器分离emoji和文字 */
+.analysis-section h5,
+.result-content h3 {
+    color: #667eea; /* 统一文字颜色，不使用渐变 */
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    padding: 10px 0;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+    /* 移除渐变背景效果，保持emoji原色 */
+}
+
+.result-content h3 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    border-bottom: 3px solid rgba(102, 126, 234, 0.3);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .analysis-section h5 {
+        font-size: 1.5rem;
+    }
+    
+    .result-content h3 {
+        font-size: 1.7rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .analysis-section h5 {
+        font-size: 1.3rem;
+    }
+    
+    .result-content h3 {
+        font-size: 1.5rem;
+    }
 }
 
 .section-content {
@@ -428,4 +522,61 @@ body {
         padding: 15px 30px;
         font-size: 1.1rem;
     }
+}
+
+/* 在现有的markdown-content样式后添加以下内容 */
+.markdown-content ul,
+.markdown-content ol {
+    margin: 15px 0;
+    padding-left: 30px; /* 增加左侧缩进 */
+    line-height: 1.8;
+}
+
+.markdown-content li {
+    margin: 8px 0;
+    padding-left: 8px; /* 额外的内容缩进 */
+    position: relative;
+}
+
+.markdown-content ul li {
+    list-style-type: disc;
+    margin-left: 0;
+}
+
+.markdown-content ol li {
+    list-style-type: decimal;
+    margin-left: 0;
+}
+
+/* 嵌套列表的额外缩进 */
+.markdown-content ul ul,
+.markdown-content ol ol,
+.markdown-content ul ol,
+.markdown-content ol ul {
+    margin: 5px 0;
+    padding-left: 25px;
+}
+
+/* 确保分析区域内的列表也有适当缩进 */
+.analysis-section ul,
+.analysis-section ol {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.analysis-section li {
+    margin: 5px 0;
+    padding-left: 5px;
+}
+
+/* 结果内容区域的列表样式 */
+.result-content ul,
+.result-content ol {
+    margin: 15px 0;
+    padding-left: 30px;
+}
+
+.result-content li {
+    margin: 8px 0;
+    padding-left: 8px;
 }
