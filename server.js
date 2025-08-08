@@ -36,7 +36,7 @@ app.post('/api/coze-workflow', async (req, res) => {
         
         // 构建符合Coze同步API格式的请求体
         const cozeRequestBody = {
-            workflow_id: "7527326304544161826",
+            workflow_id: "7536088180014202916",
             parameters: {
                 birth_datetime: birth_datetime || `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`,
                 birth_place: birth_place,

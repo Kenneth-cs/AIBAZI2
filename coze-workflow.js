@@ -23,7 +23,7 @@ export default async function handler(req, res) {
                 'Authorization': `Bearer pat_BoKyWehPisvL0EYs9SuGpBsgaKrwqFngYXmlTgNP82Ft2yrHQG5tH7bgaKqRv2JG`,
             },
             body: JSON.stringify({
-                workflow_id: '7527326304544161826',
+                workflow_id: '7536088180014202916',
                 parameters: inputs
             })
         });
